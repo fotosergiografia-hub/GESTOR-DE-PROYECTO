@@ -21,7 +21,7 @@ export enum ProjectStatus {
 export interface User {
   id: string;
   username: string;
-  password?: string; // Simple mock password storage
+  password?: string;
   name: string;
   role: UserRole;
   isActive: boolean;
@@ -35,7 +35,7 @@ export interface Project {
   description: string;
   status: ProjectStatus;
   createdAt: string;
-  assignedUsers: string[]; // IDs of users
+  assignedUsers: string[]; 
   comments?: Comment[];
 }
 
@@ -45,10 +45,14 @@ export interface Task {
   title: string;
   description: string;
   status: TaskStatus;
-  assignedTo: string; // User ID
+  assignedTo: string;
   dueDate: string;
   comments: Comment[];
-  progress: number; // 0-100
+  progress: number;
+  createdAt: string; // ISO String
+  updatedAt: string; // ISO String
+  completedAt?: string; // ISO String when status becomes APPROVED
+  revisionsCount: number;
 }
 
 export interface Comment {

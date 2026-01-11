@@ -19,14 +19,14 @@ export const getMotivationalMessage = async (action: string): Promise<string> =>
   }
 };
 
-export const getTaskSummary = async (tasks: any[]): Promise<string> => {
+export const getAdminInsights = async (metricsData: any): Promise<string> => {
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Resume el estado actual de estas tareas en una sola oración profesional para un reporte administrativo: ${JSON.stringify(tasks)}`,
+      contents: `Eres un consultor senior de gestión de equipos. Analiza los siguientes datos de rendimiento operativo de la Papelería de la 18 y proporciona 3 puntos clave (insights) breves y profesionales para la gerencia. Datos: ${JSON.stringify(metricsData)}. Enfócate en eficiencia, cuellos de botella y sugerencias de mejora sin ser punitivo.`,
     });
-    return response.text || "Resumen no disponible.";
+    return response.text || "No hay insights disponibles en este momento.";
   } catch (error) {
-    return "Progreso constante en los objetivos establecidos.";
+    return "El equipo mantiene un ritmo constante de trabajo.";
   }
 };

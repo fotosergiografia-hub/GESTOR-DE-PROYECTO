@@ -4,7 +4,8 @@ import { AppState, User, Project, Task, UserRole, TaskStatus, ProjectStatus, Com
 import Layout from './components/Layout';
 import { Button, Card, Badge, ProgressBar } from './components/UI';
 import { STATUS_COLORS, STATUS_LABELS, Icons, PROJECT_STATUS_LABELS } from './constants';
-import { getMotivationalMessage } from './geminiService';
+import { getMotivationalMessage, getAdminInsights } from './geminiService';
+import AdminMetrics from './components/AdminMetrics';
 
 const ROOT_ADMIN: User = {
   id: 'root-admin',
@@ -28,7 +29,7 @@ const INITIAL_STATE: AppState = {
 
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>(() => {
-    const saved = localStorage.getItem('pe18_state_v3');
+    const saved = localStorage.getItem('pe18_state_v4');
     if (saved) {
       const parsed = JSON.parse(saved);
       if (!parsed.users.find((u: User) => u.isRoot)) {
@@ -52,7 +53,7 @@ const App: React.FC = () => {
   const [newComment, setNewComment] = useState("");
 
   useEffect(() => {
-    localStorage.setItem('pe18_state_v3', JSON.stringify(state));
+    localStorage.setItem('pe18_state_v4', JSON.stringify(state));
   }, [state]);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -89,7 +90,21 @@ const App: React.FC = () => {
   const updateTaskStatus = async (taskId: string, newStatus: TaskStatus) => {
     setState(prev => ({
       ...prev,
-      tasks: prev.tasks.map(t => t.id === taskId ? { ...t, status: newStatus, progress: newStatus === TaskStatus.APPROVED ? 100 : t.progress } : t)
+      tasks: prev.tasks.map(t => {
+        if (t.id === taskId) {
+          const isAdjustment = newStatus === TaskStatus.REQUIRES_ADJUSTMENT;
+          const isApproved = newStatus === TaskStatus.APPROVED;
+          return { 
+            ...t, 
+            status: newStatus, 
+            progress: isApproved ? 100 : t.progress,
+            updatedAt: new Date().toISOString(),
+            completedAt: isApproved ? new Date().toISOString() : t.completedAt,
+            revisionsCount: isAdjustment ? t.revisionsCount + 1 : t.revisionsCount
+          };
+        }
+        return t;
+      })
     }));
 
     if (newStatus === TaskStatus.APPROVED || newStatus === TaskStatus.IN_REVIEW) {
@@ -137,7 +152,10 @@ const App: React.FC = () => {
       assignedTo: formData.get('assignedTo') as string,
       dueDate: formData.get('dueDate') as string,
       comments: [],
-      progress: 0
+      progress: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      revisionsCount: 0
     };
     setState(prev => ({ ...prev, tasks: [...prev.tasks, newTask] }));
     setShowTaskModal(false);
@@ -324,6 +342,15 @@ const App: React.FC = () => {
         </div>
       )}
 
+      {/* METRICS - ADMIN ONLY */}
+      {activeTab === 'metrics' && isAdmin && (
+        <AdminMetrics 
+          tasks={state.tasks} 
+          users={state.users} 
+          projects={state.projects} 
+        />
+      )}
+
       {/* PROJECTS & TASKS - ADMIN VIEW */}
       {activeTab === 'projects' && isAdmin && (
         <div className="space-y-8 max-w-6xl mx-auto">
@@ -504,7 +531,6 @@ const App: React.FC = () => {
         const isAssigned = state.currentUser?.id === task.assignedTo;
         const canStatusBeChangedByMe = (s: TaskStatus) => {
           if (isAdmin) return true;
-          // Prompt logic: users update their assigned tasks except for Ajustes/Aprobada
           if (isAssigned) {
             return s === TaskStatus.PENDING || s === TaskStatus.IN_PROGRESS || s === TaskStatus.IN_REVIEW;
           }
@@ -561,8 +587,6 @@ const App: React.FC = () => {
                         );
                       })}
                     </div>
-                    {!isAdmin && !isAssigned && <p className="text-[10px] text-orange-400 font-bold">Solo el responsable puede actualizar el progreso.</p>}
-                    {!isAdmin && isAssigned && <p className="text-[10px] text-blue-400 font-bold">Ajustes y Aprobación requieren revisión administrativa.</p>}
                  </div>
 
                  <div className="border-t border-slate-100 pt-8">
@@ -578,9 +602,6 @@ const App: React.FC = () => {
                           </div>
                         </div>
                       ))}
-                      {(task.comments.length || 0) === 0 && (
-                        <p className="text-center py-6 text-slate-400 italic text-sm">Aún no hay comentarios en esta tarea.</p>
-                      )}
                     </div>
                     <div className="flex gap-2">
                       <input type="text" placeholder="Añadir una nota o instrucción..." 

@@ -20,6 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children, userRole, userName, onLogout,
         { id: 'dashboard', label: 'Dashboard', icon: Icons.Project },
         { id: 'projects', label: 'Proyectos & Tareas', icon: Icons.Project },
         { id: 'users', label: 'Gestionar Personal', icon: Icons.Users },
+        { id: 'metrics', label: 'Métricas & Análisis', icon: Icons.Task },
       ]
     : [
         { id: 'dashboard', label: 'Mis Tareas', icon: Icons.Task },
