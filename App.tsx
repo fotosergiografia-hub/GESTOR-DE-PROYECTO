@@ -208,6 +208,12 @@ const App: React.FC = () => {
     alert("Contraseña reseteada al nombre de usuario.");
   };
 
+  const isAdmin = state.currentUser?.role === UserRole.ADMIN;
+  const filteredTasks = isAdmin ? state.tasks : state.tasks.filter(t => t.assignedTo === state.currentUser?.id);
+  const activeProjectsCount = state.projects.filter(p => p.status === ProjectStatus.ACTIVE).length;
+  const tasksInReviewCount = state.tasks.filter(t => t.status === TaskStatus.IN_REVIEW).length;
+  const tasksPendingCount = filteredTasks.filter(t => t.status !== TaskStatus.APPROVED).length;
+
   if (!state.currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
@@ -250,12 +256,6 @@ const App: React.FC = () => {
       </div>
     );
   }
-
-  const isAdmin = state.currentUser.role === UserRole.ADMIN;
-  const filteredTasks = isAdmin ? state.tasks : state.tasks.filter(t => t.assignedTo === state.currentUser?.id);
-  const activeProjectsCount = state.projects.filter(p => p.status === ProjectStatus.ACTIVE).length;
-  const tasksInReviewCount = state.tasks.filter(t => t.status === TaskStatus.IN_REVIEW).length;
-  const tasksPendingCount = filteredTasks.filter(t => t.status !== TaskStatus.APPROVED).length;
 
   return (
     <Layout
@@ -307,7 +307,7 @@ const App: React.FC = () => {
             </Card>
           </div>
 
-          <Card title="Listado de Mis Tareas" className="shadow-xl">
+          <Card title="Listado de Tareas" className="shadow-xl">
             <div className="space-y-4">
               {filteredTasks.length > 0 ? filteredTasks.map(task => (
                 <div key={task.id} 
@@ -382,9 +382,6 @@ const App: React.FC = () => {
                        <span className="text-lg font-black text-slate-700">{progress}%</span>
                     </div>
                     <ProgressBar value={progress} color="bg-green-500" />
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-slate-50 flex justify-end">
-                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setDetailProjectId(project.id); }}>Ver Tareas</Button>
                   </div>
                 </Card>
               );
@@ -531,6 +528,7 @@ const App: React.FC = () => {
         const isAssigned = state.currentUser?.id === task.assignedTo;
         const canStatusBeChangedByMe = (s: TaskStatus) => {
           if (isAdmin) return true;
+          // Prompt logic: users update their assigned tasks except for Ajustes (REQUIRES_ADJUSTMENT) and Aprobada (APPROVED)
           if (isAssigned) {
             return s === TaskStatus.PENDING || s === TaskStatus.IN_PROGRESS || s === TaskStatus.IN_REVIEW;
           }
@@ -578,15 +576,17 @@ const App: React.FC = () => {
                                   onClick={() => updateTaskStatus(detailTaskId!, st)}
                                   className={`px-4 py-2 rounded-xl text-xs font-black uppercase transition-all border-2 
                                     ${isCurrent 
-                                      ? 'border-blue-600 bg-blue-50 text-blue-700' 
+                                      ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-md' 
                                       : isModifiable 
-                                        ? 'border-transparent bg-slate-100 text-slate-500 hover:bg-blue-100 hover:text-blue-600' 
+                                        ? 'border-transparent bg-slate-100 text-slate-500 hover:bg-blue-100 hover:text-blue-600 hover:border-blue-300' 
                                         : 'border-transparent bg-slate-50 text-slate-300 cursor-not-allowed grayscale'}`}>
                             {STATUS_LABELS[st]}
                           </button>
                         );
                       })}
                     </div>
+                    {!isAdmin && !isAssigned && <p className="text-[10px] text-orange-400 font-bold">Solo el responsable puede actualizar el progreso.</p>}
+                    {!isAdmin && isAssigned && <p className="text-[10px] text-blue-400 font-bold">Ajustes y Aprobación requieren revisión administrativa.</p>}
                  </div>
 
                  <div className="border-t border-slate-100 pt-8">

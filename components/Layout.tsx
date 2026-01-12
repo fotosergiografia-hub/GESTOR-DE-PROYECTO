@@ -18,17 +18,17 @@ const Layout: React.FC<LayoutProps> = ({ children, userRole, userName, onLogout,
   const menuItems = isAdmin 
     ? [
         { id: 'dashboard', label: 'Dashboard', icon: Icons.Project },
-        { id: 'projects', label: 'Proyectos & Tareas', icon: Icons.Project },
-        { id: 'users', label: 'Gestionar Personal', icon: Icons.Users },
-        { id: 'metrics', label: 'Métricas & Análisis', icon: Icons.Task },
+        { id: 'projects', label: 'Proyectos', icon: Icons.Project },
+        { id: 'users', label: 'Personal', icon: Icons.Users },
+        { id: 'metrics', label: 'Métricas', icon: Icons.Task },
       ]
     : [
-        { id: 'dashboard', label: 'Mis Tareas', icon: Icons.Task },
+        { id: 'dashboard', label: 'Tareas', icon: Icons.Task },
       ];
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
-      {/* Sidebar */}
+    <div className="flex h-screen bg-slate-50 overflow-hidden flex-col md:flex-row">
+      {/* Desktop Sidebar */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col hidden md:flex">
         <div className="p-8 border-b border-slate-100 bg-slate-50/30">
           <h1 className="text-xl font-black text-blue-900 leading-tight">
@@ -70,22 +70,43 @@ const Layout: React.FC<LayoutProps> = ({ children, userRole, userName, onLogout,
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col overflow-hidden relative">
         {/* Mobile Header */}
-        <header className="md:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center shadow-sm">
-          <h1 className="text-lg font-black text-blue-900 uppercase">P&E 18</h1>
+        <header className="md:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center shadow-sm z-30">
+          <h1 className="text-lg font-black text-blue-900 tracking-tight">P&E de la 18</h1>
           <div className="flex items-center space-x-4">
              <span className="text-xs font-bold text-slate-500">{userName.split(' ')[0]}</span>
-             <button onClick={onLogout} className="text-red-500">
+             <button onClick={onLogout} className="text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors">
                <Icons.Logout />
              </button>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-10">
+        {/* Scrollable Content Container */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-10 pb-24 md:pb-10">
           {children}
         </div>
+
+        {/* Mobile Bottom Navigation */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-2 py-3 flex justify-around items-center z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+          {menuItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`flex flex-col items-center space-y-1 px-3 py-1 rounded-xl transition-all ${
+                activeTab === item.id 
+                  ? 'text-blue-600' 
+                  : 'text-slate-400'
+              }`}
+            >
+              <div className={`p-2 rounded-lg transition-colors ${activeTab === item.id ? 'bg-blue-50' : 'bg-transparent'}`}>
+                <item.icon />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-tighter">{item.label}</span>
+            </button>
+          ))}
+        </nav>
       </main>
     </div>
   );

@@ -42,8 +42,12 @@ export const Badge: React.FC<{ children: React.ReactNode; className?: string }> 
   </span>
 );
 
-export const Card: React.FC<{ children: React.ReactNode; className?: string; title?: string }> = ({ children, className = '', title }) => (
-  <div className={`bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm ${className}`}>
+// Added onClick prop to the Card interface and applied it to the root div to support interactivity
+export const Card: React.FC<{ children: React.ReactNode; className?: string; title?: string; onClick?: () => void }> = ({ children, className = '', title, onClick }) => (
+  <div 
+    className={`bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm ${className}`}
+    onClick={onClick}
+  >
     {title && (
       <div className="px-6 py-4 border-b border-slate-100">
         <h3 className="font-semibold text-slate-800">{title}</h3>
